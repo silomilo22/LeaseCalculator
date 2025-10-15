@@ -1,0 +1,157 @@
+:root {
+  --bg: #0f172a;
+  --panel: #111827;
+  --panel-2: #0b1226;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --accent: #60a5fa;
+  --accent-2: #22c55e;
+  --danger: #ef4444;
+  --border: #1f2937;
+  --chip: #1f2937;
+  --link: #93c5fd;
+}
+
+/* Light mode fix */
+:root.light {
+  --bg: #f5f7fb;
+  --panel: #ffffff;
+  --panel-2: #fbfdff;
+  --text: #0b1226;
+  --muted: #334155;
+  --accent: #2563eb;
+  --accent-2: #16a34a;
+  --danger: #dc2626;
+  --border: #cbd5e1;
+  --chip: #eef2ff;
+  --link: #1d4ed8;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.container {
+  max-width: 1000px;
+  margin: 20px auto;
+  padding: 0 20px;
+}
+
+h1 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.theme {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 6px 10px;
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.tab-btn {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  background: var(--panel);
+  color: var(--text);
+}
+.tab-btn.active {
+  outline: 2px solid var(--accent);
+  background: var(--panel-2);
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 20px;
+  border-radius: 12px;
+}
+
+label {
+  font-size: 14px;
+  color: var(--muted);
+}
+input, textarea {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text);
+}
+textarea {
+  min-height: 100px;
+}
+
+.btn {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  background: var(--panel-2);
+  color: var(--text);
+}
+.btn.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: transparent;
+}
+.btn.success {
+  background: var(--accent-2);
+  color: #fff;
+  border-color: transparent;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.result {
+  margin-top: 16px;
+  background: var(--panel-2);
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px dashed var(--border);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.ok { color: var(--accent-2); }
+.bad { color: var(--danger); }
+
+.table-wrap {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th, td {
+  border-bottom: 1px solid var(--border);
+  padding: 8px;
+  text-align: left;
+}
+th {
+  color: var(--muted);
+  cursor: pointer;
+}
