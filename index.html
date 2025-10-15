@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lease Cost Calculator</title>
+<style>
+  :root{
+    --bg:#0f172a; /* slate-900 */
+    --panel:#111827; /* gray-900 */
+    --panel-2:#0b1226;
+    --text:#e5e7eb; /* gray-200 */
+    --muted:#9ca3af; /* gray-400 */
+    --accent:#60a5fa; /* blue-400 */
+    --accent-2:#22c55e; /* green-500 */
+    --danger:#ef4444; /* red-500 */
+    --border:#1f2937; /* gray-800 */
+    --chip:#1f2937;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
+    background:linear-gradient(180deg,var(--bg),#060b1a 60%, #040a1b 100%);
+    color:var(--text);
+  }
+  .container{max-width:1100px;margin:24px auto;padding:0 16px}
+  h1{font-size:clamp(20px,3vw,28px);margin:0 0 12px}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .tab-btn{
+    border:1px solid var(--border); background:var(--panel);
+    color:var(--text); padding:10px 14px; border-radius:10px; cursor:pointer;
+  }
+  .tab-btn.active{outline:2px solid var(--accent); background:#0a0f22}
+  .panel{border:1px solid var(--border); background:var(--panel); border-radius:14px; padding:16px}
+  .grid{display:grid; gap:12px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:1fr 1fr 1fr}
+  @media(max-width:800px){.g2,.g3{grid-template-columns:1fr}}
+  label{font-size:14px;color:var(--muted)}
+  input[type=text], input[type=number], textarea, select{
+    width:100%; padding:10px 12px;border:1px solid var(--border);
+    border-radius:10px; background:var(--panel-2); color:var(--text);
+  }
+  textarea{min-height:140px;resize:vertical}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .btn{
+    padding:10px 14px;border-radius:10px;border:1px solid var(--border);
+    background:#0b1430;color:var(--text);cursor:pointer;
+  }
+  .btn.primary{background:var(--accent); color:#0b1327; border-color:transparent; font-weight:600}
+  .btn.ghost{background:transparent}
+  .btn.success{background:var(--accent-2); color:#07171a; border-color:transparent; font-weight:600}
+  .btn:hover{filter:brightness(1.05)}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;background:var(--chip);
+    border:1px solid var(--border); border-radius:999px}
+  .muted{color:var(--muted)}
+  .result{padding:12px;border:1px dashed var(--border);border-radius:12px;background:#0b1430}
+  .ok{color:var(--accent-2)} .bad{color:var(--danger)}
+  table{width:100%;border-collapse:collapse;min-width:700px}
+  th, td{border-bottom:1px solid var(--border);padding:10px 8px;text-align:left}
+  th{color:var(--muted);font-weight:600}
+  .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:12px}
+  .hint{font-size:12px;color:var(--muted)}
+  .badge{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--chip);border:1px solid var(--border)}
+  .sr{position:absolute !important;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Lease Cost Calculator</h1>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="analyze">Analyze Lease</button>
+    <button class="tab-btn" data-tab="target">Target Rent</button>
+    <button class="tab-btn" data-tab="batch">Batch Mode</button>
+  </div>
+
+  <!-- Analyze -->
+  <section id="tab-analyze" class="panel">
+    <div class="grid g2">
+      <div>
+        <label>Address (optional)</label>
+        <input id="an-addr" type="text" placeholder="e.g. 2221 S Hughes St 79109" />
+      </div>
+      <div></div>
+
+      <div>
+        <label>Monthly Lease Cost ($)</label>
+        <input id="an-monthly" type="text" placeholder="e.g. 2000 or $2,000" />
+      </div>
+      <div>
+        <label>Square Footage</label>
+        <input id="an-sqft" type="text" placeholder="e.g. 1850" />
+      </div>
+
+      <div class="row">
+        <label class="pill">
+          <input id="an-use-budget" type="checkbox" />
+          Apply budget check (max $/sq ft)
+        </label>
+        <input id="an-maxpsf" type="text" style="max-width:180px" placeholder="e.g. 1.10" disabled />
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="an-calc">Calculate</button>
+      <button class="btn" id="an-clear">Clear</button>
+    </div>
+
+    <div class="grid g2" style="margin-top:16px">
+      <div class="result">
+        <div><span class="muted">Address:</span> <span id="an-out-addr">—</span></div>
+        <div><span class="muted">Cost per sq ft:</span> <strong id="an-out-cpsf">—</strong></div>
+        <div id="an-out-verdict" class="muted" style="margin-top:6px">—</div>
+        <div id="an-out-suggest" class="muted">—</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Target -->
+  <section id="tab-target" class="panel" hidden>
+    <div class="grid g2">
+      <div>
+        <label>Square Footage</label>
+        <input id="tg-sqft" type="text" placeholder="e.g. 1500" />
+      </div>
+      <div>
+        <label>Desired $ per sq ft</label>
+        <input id="tg-psf" type="text" placeholder="e.g. 1.10" />
+      </div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="tg-calc">Calculate</button>
+      <button class="btn" id="tg-clear">Clear</button>
+    </div>
+    <div class="grid g2" style="margin-top:16px">
+      <div class="result">
+        <div><span class="muted">Target Monthly Rent:</span> <strong id="tg-monthly">—</strong></div>
+        <div><span class="muted">Target Yearly Rent:</span> <span id="tg-yearly">—</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Batch -->
+  <section id="tab-batch" class="panel" hidden>
+    <div class="row" style="gap:16px; align-items:flex-end;">
+      <div class="row" style="gap:10px">
+        <span class="muted">Mode:</span>
+        <label class="pill"><input type="radio" name="bmode" value="analyze" checked /> Analyze listings (address?, monthly, sqft)</label>
+        <label class="pill"><input type="radio" name="bmode" value="target" /> Target rent (sqft, $/sqft)</label>
+      </div>
+
+      <div id="batch-budget-wrap" class="row" style="gap:10px">
+        <label class="pill">
+          <input id="b-use-budget" type="checkbox" />
+          Apply budget check to all (max $/sq ft)
+        </label>
+        <input id="b-maxpsf" type="text" placeholder="e.g. 1.10" style="max-width:140px"/>
+      </div>
+    </div>
+
+    <hr style="border:0;border-top:1px solid var(--border);margin:14px 0">
+
+    <!-- Quick Entry -->
+    <div>
+      <div class="muted" style="margin-bottom:6px">Quick Entry (adds a line to the paste box):</div>
+
+      <div id="qe-addr-row" class="grid g2" style="margin-bottom:8px">
+        <div>
+          <label>Address (Analyze mode)</label>
+          <input id="qe-addr" type="text" placeholder='e.g. "7310 Mosley St (Condo)"' />
+        </div>
+      </div>
+
+      <div class="grid g3" id="qe-row">
+        <div>
+          <label id="qe-l1">Monthly ($)</label>
+          <input id="qe-a" type="text" placeholder="e.g. 2000" />
+        </div>
+        <div>
+          <label id="qe-l2">Sq Ft</label>
+          <input id="qe-b" type="text" placeholder="e.g. 1850" />
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:8px">
+          <button class="btn success" id="qe-add">Add line → Paste box</button>
+          <button class="btn" id="qe-clear">Clear Quick Entry</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:12px" class="muted">
+      Paste rows here (CSV or space-separated). Analyze accepts either
+      <span class="badge">address, monthly, sqft</span> or
+      <span class="badge">monthly, sqft</span>. Use quotes if address contains commas.
+    </div>
+
+    <textarea id="b-paste" placeholder='Examples:
+"2221 S Hughes St 79109", 2000, 2200
+2000 1850'></textarea>
+
+    <div class="row" style="margin-top:8px">
+      <button class="btn primary" id="b-calc">Calculate Batch</button>
+      <button class="btn" id="b-clear">Clear Input</button>
+      <button class="btn" id="b-copy">Copy Results</button>
+      <button class="btn" id="b-save">Save Results to CSV…</button>
+    </div>
+
+    <div class="table-wrap" style="margin-top:14px">
+      <table id="b-table">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="hint" style="margin-top:6px">Tip: drag the page edge to see more columns; table scrolls horizontally.</div>
+  </section>
+</div>
+
+<script>
+  // ---------- Helpers ----------
+  const $ = sel => document.querySelector(sel);
+  const $$ = sel => Array.from(document.querySelectorAll(sel));
+  const money= n => "$" + Number(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  const clean= s => (s ?? "").toString().replace(/\$/g,"").replace(/,/g,"").trim();
+  const num = s => { const v = Number(clean(s)); return Number.isFinite(v) ? v : NaN; };
+
+  function requirePos(val, name, allowZero=false){
+    if (!Number.isFinite(val) || (allowZero ? val < 0 : val <= 0))
+      throw new Error(`${name} must be ${allowZero ? "≥ 0" : "> 0"} and numeric.`);
+    return val;
+  }
+
+  function setHidden(el, hidden){ hidden ? el.setAttribute("hidden","") : el.removeAttribute("hidden"); }
+
+  // ---------- Tabs ----------
+  $$(".tab-btn").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      $$(".tab-btn").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      const tab = btn.dataset.tab;
+      setHidden($("#tab-analyze"), tab!=="analyze");
+      setHidden($("#tab-target"), tab!=="target");
+      setHidden($("#tab-batch"), tab!=="batch");
+    });
+  });
+
+  // ---------- Analyze ----------
+  $("#an-use-budget").addEventListener("change", e=>{
+    $("#an-maxpsf").disabled = !e.target.checked;
+    if(!e.target.checked){ $("#an-maxpsf").value=""; }
+  });
+
+  $("#an-calc").addEventListener("click", ()=>{
+    try{
+      const addr = $("#an-addr").value.trim();
+      const monthly= requirePos(num($("#an-monthly").value),"Monthly Lease Cost",false);
+      const sqft = requirePos(num($("#an-sqft").value),"Square Footage",false);
+      const cpsf = monthly / sqft;
+      $("#an-out-addr").textContent = addr || "—";
+      $("#an-out-cpsf").textContent = money(cpsf) + "/sq ft";
+
+      if ($("#an-use-budget").checked){
+        const maxpsf = requirePos(num($("#an-maxpsf").value),"Max $ per sq ft",false);
+        const suggested = maxpsf * sqft;
+        const diff = cpsf - maxpsf;
+        const overUnder = monthly - suggested;
+        if (diff > 0){
+          $("#an-out-verdict").innerHTML =
+            `<span class="bad">Too expensive</span> by ${money(diff)} per sq ft (${money(overUnder)} over your target).`;
+        } else {
+          $("#an-out-verdict").innerHTML =
+            `<span class="ok">Within budget</span> by ${money(Math.abs(diff))} per sq ft (${money(Math.abs(overUnder))} under your target).`;
+        }
+        $("#an-out-suggest").textContent = `To meet your limit, monthly rent should be ≤ ${money(suggested)}.`;
+      } else {
+        $("#an-out-verdict").textContent = "(No budget check applied)";
+        $("#an-out-suggest").textContent = "—";
+      }
+    }catch(err){ alert(err.message); }
+  });
+
+  $("#an-clear").addEventListener("click", ()=>{
+    ["an-addr","an-monthly","an-sqft","an-maxpsf"].forEach(id=>$("#"+id).value="");
+    $("#an-use-budget").checked=false; $("#an-maxpsf").disabled=true;
+    $("#an-out-addr").textContent="—"; $("#an-out-cpsf").textContent="—";
+    $("#an-out-verdict").textContent="—"; $("#an-out-suggest").textContent="—";
+  });
+
+  // ---------- Target ----------
+  $("#tg-calc").addEventListener("click", ()=>{
+    try{
+      const sqft = requirePos(num($("#tg-sqft").value),"Square Footage",false);
+      const psf = requirePos(num($("#tg-psf").value),"Desired $ per sq ft",false);
+      const monthly = sqft * psf;
+      $("#tg-monthly").textContent = money(monthly);
+      $("#tg-yearly").textContent = money(monthly*12);
+    }catch(err){ alert(err.message); }
+  });
+
+  $("#tg-clear").addEventListener("click", ()=>{
+    ["tg-sqft","tg-psf"].forEach(id=>$("#"+id).value="");
+    $("#tg-monthly").textContent="—"; $("#tg-yearly").textContent="—";
+  });
+
+  // ---------- Batch ----------
+  // Mode switching: disable budget controls for target mode
+  function setBatchMode(mode){
+    const isAnalyze = mode==="analyze";
+    setHidden($("#qe-addr-row"), !isAnalyze);
+    $("#qe-l1").textContent = isAnalyze? "Monthly ($)":"Sq Ft";
+    $("#qe-l2").textContent = isAnalyze? "Sq Ft":"Desired $/sq ft";
+    $("#qe-a").placeholder = isAnalyze? "e.g. 2000":"e.g. 1500";
+    $("#qe-b").placeholder = isAnalyze? "e.g. 1850":"e.g. 1.10";
+
+    $("#b-use-budget").checked = false;
+    $("#b-maxpsf").value = "";
+    const budgetDisabled = !isAnalyze;
+    $("#b-use-budget").disabled = budgetDisabled;
+    $("#b-maxpsf").disabled = budgetDisabled || !$("#b-use-budget").checked;
+    $("#batch-budget-wrap").style.opacity = budgetDisabled? 0.5 : 1;
+  }
+  setBatchMode("analyze");
+  $$('input[name="bmode"]').forEach(r=>{
+    r.addEventListener("change", ()=> setBatchMode(r.value));
+  });
+
+  $("#b-use-budget").addEventListener("change", e=>{
+    $("#b-maxpsf").disabled = !e.target.checked;
+    if(!e.target.checked) $("#b-maxpsf").value="";
+  });
+
+  // Quick entry -> append to paste box
+  $("#qe-add").addEventListener("click", ()=>{
+    const mode = $$('input[name="bmode"]:checked')[0].value;
+    let line="";
+    if (mode==="analyze"){
+      const addr = $("#qe-addr").value.trim();
+      const a = $("#qe-a").value.trim();
+      const b = $("#qe-b").value.trim();
+      if(!a || !b){ alert("Enter Monthly and Sq Ft (address optional)."); return; }
+      const monthly = num(a), sqft = num(b);
+      if(!Number.isFinite(monthly) || monthly<0 || !Number.isFinite(sqft) || sqft<=0){
+        alert("Monthly must be ≥ 0 and Sq Ft > 0."); return;
+      }
+      const addrOut = addr.includes(",") ? `"${addr}"` : addr;
+      line = addr ? `${addrOut}, ${Math.round(monthly)}, ${Math.round(sqft)}` : `${Math.round(monthly)}, ${Math.round(sqft)}`;
+    } else {
+      const sqft = num($("#qe-a").value), psf = num($("#qe-b").value);
+      if(!Number.isFinite(sqft) || sqft<=0 || !Number.isFinite(psf) || psf<=0){
+        alert("Sq Ft > 0 and $/sqft > 0."); return;
+      }
+      line = `${Math.round(sqft)}, ${psf.toFixed(2)}`;
+    }
+    const ta = $("#b-paste");
+    if (ta.value && !ta.value.endsWith("\n")) ta.value += "\n";
+    ta.value += line + "\n";
+    $("#qe-addr").value=""; $("#qe-a").value=""; $("#qe-b").value="";
+    if(mode==="analyze") $("#qe-addr").focus(); else $("#qe-a").focus();
+  });
+  $("#qe-clear").addEventListener("click", ()=> { $("#qe-addr").value=""; $("#qe-a").value=""; $("#qe-b").value=""; });
+
+  // Parse paste (CSV first, then loose split)
+  function parsePaste(text, mode){
+    const rows=[];
+    // CSV try
+    try{
+      // Simple CSV split honoring quotes
+      const lines = text.split(/\r?\n/).filter(l=>l.trim().length);
+      for (const line of lines){
+        const cells = [];
+        let cur="", inQ=false;
+        for (let i=0;i<line.length;i++){
+          const ch=line[i];
+          if (ch==='\"'){ inQ=!inQ; continue; }
+          if (!inQ && ch===','){ cells.push(cur.trim()); cur=""; continue; }
+          cur += ch;
+        }
+        cells.push(cur.trim());
+        rows.push(cells.filter(c=>c!==""));
+      }
+    }catch{}
+    if (!rows.length){
+      text.split(/\r?\n/).forEach(l=>{
+        const cells = l.replace(/,/g," ").split(/\s+/).filter(Boolean);
+        if (cells.length) rows.push(cells);
+      });
+    }
+
+    // Normalize
+    const norm=[];
+    for (const parts of rows){
+      if (mode==="analyze"){
+        if (parts.length>=3){
+          norm.push([parts[0], parts[1], parts[2]]); // [addr, monthly, sqft]
+        } else if (parts.length===2){
+          norm.push(["", parts[0], parts[1]]); // [ , monthly, sqft]
+        } else {
+          norm.push(["__ERR__","__ERR__","__ERR__"]);
+        }
+      } else {
+        if (parts.length>=2) norm.push([parts[0], parts[1]]); // [sqft, psf]
+        else norm.push(["__ERR__","__ERR__"]);
+      }
+    }
+    return norm;
+  }
+
+  function setTable(mode, rows){
+    const thead=$("#b-table thead"), tbody=$("#b-table tbody");
+    thead.innerHTML = tbody.innerHTML = "";
+    if (mode==="analyze"){
+      thead.innerHTML = `<tr>
+        <th>Address</th><th>Monthly</th><th>Sq Ft</th><th>$/sq ft</th>
+        <th>Verdict</th><th>Over/Under (mo)</th><th>Suggested Max (mo)</th>
+      </tr>`;
+      for (const r of rows){
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${r.addr}</td><td>${money(r.monthly)}</td><td>${r.sqft.toLocaleString()}</td>
+                        <td>${money(r.cpsf)}</td><td>${r.verdict}</td>
+                        <td>${r.overUnder??"—"}</td><td>${r.suggested??"—"}</td>`;
+        tbody.appendChild(tr);
+      }
+    } else {
+      thead.innerHTML = `<tr>
+        <th>Sq Ft</th><th>Desired $/sq ft</th><th>Target Monthly</th><th>Target Yearly</th>
+      </tr>`;
+      for (const r of rows){
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${r.sqft.toLocaleString()}</td><td>${money(r.psf)}</td>
+                        <td>${money(r.monthly)}</td><td>${money(r.yearly)}</td>`;
+        tbody.appendChild(tr);
+      }
+    }
+  }
+
+  $("#b-calc").addEventListener("click", ()=>{
+    const mode = $$('input[name="bmode"]:checked')[0].value;
+    const rows = parsePaste($("#b-paste").value.trim(), mode);
+    const errors=[];
+    const out=[];
+    if (mode==="analyze"){
+      let maxpsf = null;
+      if ($("#b-use-budget").checked){
+        maxpsf = num($("#b-maxpsf").value);
+        if (!(Number.isFinite(maxpsf) && maxpsf>0)){ alert("Max $/sq ft must be a positive number."); return; }
+      }
+      rows.forEach((r,idx)=>{
+        try{
+          if (r[0]==="__ERR__") throw new Error("Expected: address, monthly, sqft OR monthly, sqft");
+          const addr=r[0], monthly=requirePos(num(r[1]),"Monthly",true), sqft=requirePos(num(r[2]),"Sq Ft",false);
+          const cpsf = monthly/sqft;
+          if (maxpsf!=null){
+            const suggested=maxpsf*sqft, overUnder=monthly-suggested;
+            const verdict = cpsf>maxpsf ? `<span class="bad">Too expensive</span>` : `<span class="ok">Within budget</span>`;
+            out.push({addr, monthly, sqft, cpsf, verdict, overUnder:money(overUnder), suggested:money(suggested)});
+          } else {
+            out.push({addr, monthly, sqft, cpsf, verdict:"(no budget)", overUnder:"—", suggested:"—"});
+          }
+        }catch(e){ errors.push(`Line ${idx+1}: ${e.message}`); }
+      });
+    } else {
+      rows.forEach((r,idx)=>{
+        try{
+          const sqft=requirePos(num(r[0]),"Sq Ft",false), psf=requirePos(num(r[1]),"$ per sq ft",false);
+          const monthly=sqft*psf, yearly=monthly*12;
+          out.push({sqft, psf, monthly, yearly});
+        }catch(e){ errors.push(`Line ${idx+1}: ${e.message}`); }
+      });
+    }
+
+    setTable(mode, out);
+    if (errors.length) alert("Some rows had errors:\n\n" + errors.slice(0,20).join("\n") + (errors.length>20?"\n...":""));
+  });
+
+  $("#b-clear").addEventListener("click", ()=>{ $("#b-paste").value=""; $("#b-table thead").innerHTML=""; $("#b-table tbody").innerHTML=""; });
+
+  $("#b-copy").addEventListener("click", ()=>{
+    const table=$("#b-table");
+    if (!table.tBodies[0].rows.length){ alert("No results to copy."); return; }
+    const heads=[...table.tHead.rows[0].cells].map(c=>c.textContent);
+    const lines=[heads.join("\t")];
+    [...table.tBodies[0].rows].forEach(tr=>{
+      lines.push([...tr.cells].map(td=>td.textContent).join("\t"));
+    });
+    navigator.clipboard.writeText(lines.join("\n")).then(()=>alert("Copied to clipboard."));
+  });
+
+  $("#b-save").addEventListener("click", ()=>{
+    const table=$("#b-table");
+    if (!table.tBodies[0].rows.length){ alert("No results to save."); return; }
+    const heads=[...table.tHead.rows[0].cells].map(c=>c.textContent);
+    const rows=[heads];
+    [...table.tBodies[0].rows].forEach(tr=>{
+      rows.push([...tr.cells].map(td=>td.textContent));
+    });
+    const csv = rows.map(r=>r.map(cell=>{
+      const needsQuote = /[",\n]/.test(cell);
+      return needsQuote ? `"${cell.replace(/"/g,'""')}"` : cell;
+    }).join(",")).join("\n");
+    const blob = new Blob([csv], {type:"text/csv"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "lease_results.csv";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+</script>
+</body>
+</html>
