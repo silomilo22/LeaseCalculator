@@ -10,13 +10,13 @@
   <div class="container">
     <h1>
       <span>Lease Cost Calculator</span>
-      <button id="themeToggle" class="theme">Toggle Light/Dark</button>
+      <button id="themeToggle" class="theme" type="button">Toggle Light/Dark</button>
     </h1>
 
     <div class="tabs">
-      <button class="tab-btn active" data-tab="analyze">Analyze Lease</button>
-      <button class="tab-btn" data-tab="target">Target Rent</button>
-      <button class="tab-btn" data-tab="batch">Batch Mode</button>
+      <button class="tab-btn active" data-tab="analyze" type="button">Analyze Lease</button>
+      <button class="tab-btn" data-tab="target" type="button">Target Rent</button>
+      <button class="tab-btn" data-tab="batch" type="button">Batch Mode</button>
     </div>
 
     <!-- Analyze Lease -->
@@ -29,7 +29,7 @@
         <div></div>
         <div>
           <label>Monthly Lease Cost ($)</label>
-          <input id="an-monthly" type="text" placeholder="e.g. 2000 or $2,000">
+          <input id="an-monthly" type="text" placeholder="e.g. 2,000">
         </div>
         <div>
           <label>Square Footage</label>
@@ -55,8 +55,8 @@
       </div>
 
       <div class="row">
-        <button class="btn primary" id="an-calc">Calculate</button>
-        <button class="btn" id="an-clear">Clear</button>
+        <button class="btn primary" id="an-calc" type="button">Calculate</button>
+        <button class="btn" id="an-clear" type="button">Clear</button>
       </div>
 
       <div class="result" id="an-result">
@@ -64,8 +64,8 @@
         <div><span class="muted">Cost per sq ft:</span> <strong id="an-out-cpsf">—</strong></div>
         <div><span class="muted">Effective Monthly (incl. extras):</span> <span id="an-out-eff">—</span></div>
         <div><span class="muted">Base Monthly:</span> <span id="an-out-base">—</span></div>
-        <div id="an-out-verdict" class="muted"></div>
-        <div id="an-out-suggest" class="muted"></div>
+        <div id="an-out-verdict" class="muted">—</div>
+        <div id="an-out-suggest" class="muted">—</div>
       </div>
     </section>
 
@@ -81,12 +81,10 @@
           <input id="tg-psf" type="text" placeholder="e.g. 1.10">
         </div>
       </div>
-
       <div class="row">
-        <button class="btn primary" id="tg-calc">Calculate</button>
-        <button class="btn" id="tg-clear">Clear</button>
+        <button class="btn primary" id="tg-calc" type="button">Calculate</button>
+        <button class="btn" id="tg-clear" type="button">Clear</button>
       </div>
-
       <div class="result">
         <div><span class="muted">Target Monthly Rent:</span> <strong id="tg-monthly">—</strong></div>
         <div><span class="muted">Target Yearly Rent:</span> <span id="tg-yearly">—</span></div>
@@ -108,6 +106,7 @@
       </div>
 
       <div class="muted">Quick Entry (adds to the paste box):</div>
+
       <div id="qe-addr-row" class="grid g2">
         <div>
           <label>Address</label>
@@ -119,17 +118,17 @@
         <div><label id="qe-l1">Monthly ($)</label><input id="qe-a" type="text" placeholder="e.g. 2000"></div>
         <div><label id="qe-l2">Sq Ft</label><input id="qe-b" type="text" placeholder="e.g. 1850"></div>
         <div style="display:flex;align-items:flex-end;gap:8px;">
-          <button class="btn success" id="qe-add">Add line → Paste box</button>
-          <button class="btn" id="qe-clear">Clear</button>
+          <button class="btn success" id="qe-add" type="button">Add line → Paste box</button>
+          <button class="btn" id="qe-clear" type="button">Clear</button>
         </div>
       </div>
 
       <textarea id="b-paste" placeholder='"2221 S Hughes St 79109", 2000, 2200'></textarea>
 
       <div class="row">
-        <button class="btn primary" id="b-calc">Calculate Batch</button>
-        <button class="btn" id="b-clear">Clear Input</button>
-        <button class="btn" id="b-copy">Copy Results</button>
+        <button class="btn primary" id="b-calc" type="button">Calculate Batch</button>
+        <button class="btn" id="b-clear" type="button">Clear Input</button>
+        <button class="btn" id="b-copy" type="button">Copy Results</button>
       </div>
 
       <div class="table-wrap">
