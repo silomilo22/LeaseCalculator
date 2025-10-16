@@ -231,3 +231,24 @@ $("#b-copy").addEventListener("click",()=>{
   const lines=[header, ...[...tbody.rows].map(r=>[...r.cells].map(td=>td.textContent).join("\t"))];
   navigator.clipboard.writeText(lines.join("\n")).then(()=>alert("Copied to clipboard."));
 });
+
+// ---------- Target (fix) ----------
+$("#tg-calc").addEventListener("click", () => {
+  try {
+    const sqft = req(num($("#tg-sqft").value), "Square Footage");
+    const psf  = req(num($("#tg-psf").value), "Desired $ per sq ft");
+    const monthly = sqft * psf;
+    $("#tg-monthly").textContent = money(monthly);
+    $("#tg-yearly").textContent  = money(monthly * 12);
+  } catch (err) {
+    alert(err.message);
+  }
+});
+
+$("#tg-clear").addEventListener("click", () => {
+  ["tg-sqft","tg-psf"].forEach(id => $("#"+id).value = "");
+  $("#tg-monthly").textContent = "—";
+  $("#tg-yearly").textContent  = "—";
+});
+
+
