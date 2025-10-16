@@ -1,9 +1,9 @@
 // ---------- Helpers ----------
-const $ = s => document.querySelector(s);
+const $  = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const money = n => "$" + Number(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
 const clean = s => (s ?? "").toString().replace(/\$/g,"").replace(/,/g,"").trim();
-const num = s => { const v = Number(clean(s)); return Number.isFinite(v) ? v : NaN; };
+const num   = s => { const v = Number(clean(s)); return Number.isFinite(v) ? v : NaN; };
 function req(val, name, allowZero=false){
   if (!Number.isFinite(val) || (allowZero ? val < 0 : val <= 0)){
     throw new Error(`${name} must be ${allowZero ? "≥ 0" : "> 0"} and numeric.`);
@@ -19,8 +19,8 @@ $$(".tab-btn").forEach(btn=>{
     btn.classList.add("active");
     const tab = btn.dataset.tab;
     setHidden($("#tab-analyze"), tab!=="analyze");
-    setHidden($("#tab-target"), tab!=="target");
-    setHidden($("#tab-batch"), tab!=="batch");
+    setHidden($("#tab-target"),  tab!=="target");
+    setHidden($("#tab-batch"),   tab!=="batch");
   });
 });
 
@@ -36,17 +36,17 @@ $("#an-use-extras").addEventListener("change", e => $("#an-extras").disabled = !
 
 $("#an-calc").addEventListener("click",()=>{
   try{
-    const addr = $("#an-addr").value.trim();
+    const addr    = $("#an-addr").value.trim();
     const monthly = req(num($("#an-monthly").value), "Monthly Lease Cost");
-    const sqft = req(num($("#an-sqft").value), "Square Footage");
-    const extras = $("#an-use-extras").checked ? req(num($("#an-extras").value), "Extras", true) : 0;
+    const sqft    = req(num($("#an-sqft").value), "Square Footage");
+    const extras  = $("#an-use-extras").checked ? req(num($("#an-extras").value), "Extras", true) : 0;
 
     const effMonthly = monthly + extras;
     const cpsf = effMonthly / sqft;
 
     $("#an-out-addr").textContent = addr || "—";
     $("#an-out-cpsf").textContent = money(cpsf) + "/sq ft";
-    $("#an-out-eff").textContent = money(effMonthly);
+    $("#an-out-eff").textContent  = money(effMonthly);
     $("#an-out-base").textContent = money(monthly);
 
     if ($("#an-use-budget").checked){
@@ -78,17 +78,17 @@ function setBatchMode(mode){
   const isAnalyze = mode==="analyze";
   setHidden($("#qe-addr-row"), !isAnalyze);
   $("#qe-l1").textContent = isAnalyze ? "Monthly ($)" : "Sq Ft";
-  $("#qe-l2").textContent = isAnalyze ? "Sq Ft" : "Desired $/sq ft";
-  $("#qe-a").placeholder = isAnalyze ? "e.g. 2000" : "e.g. 1500";
-  $("#qe-b").placeholder = isAnalyze ? "e.g. 1850" : "e.g. 1.10";
+  $("#qe-l2").textContent = isAnalyze ? "Sq Ft"       : "Desired $/sq ft";
+  $("#qe-a").placeholder  = isAnalyze ? "e.g. 2000"   : "e.g. 1500";
+  $("#qe-b").placeholder  = isAnalyze ? "e.g. 1850"   : "e.g. 1.10";
 
   $("#b-use-budget").checked=false; $("#b-maxpsf").value="";
   $("#b-use-extras").checked=false; $("#b-extras").value="";
 
   $("#b-use-budget").disabled = !isAnalyze;
-  $("#b-maxpsf").disabled = !isAnalyze;
+  $("#b-maxpsf").disabled     = !isAnalyze;
   $("#b-use-extras").disabled = !isAnalyze;
-  $("#b-extras").disabled = !isAnalyze;
+  $("#b-extras").disabled     = !isAnalyze;
 }
 setBatchMode("analyze");
 $$('input[name="bmode"]').forEach(r=> r.addEventListener("change",()=> setBatchMode(r.value)));
@@ -103,7 +103,7 @@ $("#qe-add").addEventListener("click",()=>{
   if (mode === "analyze"){
     const addr = $("#qe-addr").value.trim();
     const monthly = num($("#qe-a").value);
-    const sqft = num($("#qe-b").value);
+    const sqft    = num($("#qe-b").value);
     if (!Number.isFinite(monthly) || monthly < 0 || !Number.isFinite(sqft) || sqft <= 0){
       alert("Enter Monthly (≥ 0) and Sq Ft (> 0)."); return;
     }
@@ -114,7 +114,7 @@ $("#qe-add").addEventListener("click",()=>{
     ta.value += line + "\n";
   } else {
     const sqft = num($("#qe-a").value);
-    const psf = num($("#qe-b").value);
+    const psf  = num($("#qe-b").value);
     if (!Number.isFinite(sqft) || sqft <= 0 || !Number.isFinite(psf) || psf <= 0){
       alert("Enter Sq Ft (> 0) and $/sq ft (> 0)."); return;
     }
@@ -126,7 +126,7 @@ $("#qe-add").addEventListener("click",()=>{
 });
 $("#qe-clear").addEventListener("click",()=> ["qe-addr","qe-a","qe-b"].forEach(id=> $("#"+id).value=""));
 
-// Robust CSV/loose splitter (respects quotes; also works with whitespace-only)
+// Robust CSV/loose splitter
 function splitSmart(line){
   const out=[]; let cur=""; let inQ=false;
   for (let i=0;i<line.length;i++){
@@ -136,7 +136,6 @@ function splitSmart(line){
     cur += ch;
   }
   if (cur.trim() !== "") out.push(cur.trim());
-  // If no real commas were used, fall back to whitespace split
   if (out.length <= 1){ return line.replace(/,/g," ").split(/\s+/).filter(Boolean); }
   return out;
 }
@@ -162,15 +161,12 @@ $("#b-calc").addEventListener("click",()=>{
 
     text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).forEach((line, i)=>{
       const fields = splitSmart(line);
-
-      // Determine numeric tail: [ ...address..., (extras?), monthly, sqft ]
-      // Start from end and peel off numbers
       if (fields.length < 2){ return; }
+
       const sqft = num(fields[fields.length-1]);
       const monthly = num(fields[fields.length-2]);
       if (!Number.isFinite(sqft) || sqft <= 0 || !Number.isFinite(monthly)){ return; }
 
-      // Optional extras = 3rd from last if numeric
       let extras = null;
       if (fields.length >= 3){
         const maybeExtras = num(fields[fields.length-3]);
@@ -179,7 +175,6 @@ $("#b-calc").addEventListener("click",()=>{
       if (extras === null && Number.isFinite(globalExtras)){ extras = globalExtras; }
       extras = Number.isFinite(extras) ? extras : 0;
 
-      // Address = everything before numeric tail (2 or 3 items)
       const addrEnd = fields.length - (Number.isFinite(num(fields[fields.length-3])) ? 3 : 2);
       const address = addrEnd > 0 ? fields.slice(0, addrEnd).join(", ") : "(no address)";
 
@@ -192,9 +187,14 @@ $("#b-calc").addEventListener("click",()=>{
         suggested = money(globalMax * sqft);
       }
 
+      // clickable address
+      const mapsLink = address !== "(no address)"
+        ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}" target="_blank" style="color:var(--link);text-decoration:underline">${address}</a>`
+        : address;
+
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${address}</td>
+        <td>${mapsLink}</td>
         <td>${money(monthly)}</td>
         <td>${money(extras)}</td>
         <td>${sqft.toLocaleString()}</td>
